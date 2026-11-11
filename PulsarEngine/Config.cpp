@@ -20,6 +20,7 @@ ConfigFile *ConfigFile::LoadConfigFile(const char *path, u32 &readBytesOut) {
         ConfigFile::CheckSection(conf->GetSection<InfoHolder>());
         ConfigFile::CheckSection(conf->GetSection<CupsHolder>());
         ConfigFile::CheckSection(conf->GetSection<PulBMG>());
+        ConfigFile::CheckSection(conf->GetSection<FriendsHolder>());
     }
     return conf;
 }

@@ -11,7 +11,8 @@ namespace Pulsar {
 enum SectionIndexes {
     SECTION_INFO,
     SECTION_CUPS,
-    SECTION_BMG
+    SECTION_BMG,
+    SECTION_FRIENDS
 };
 
 struct Variant {
@@ -51,7 +52,7 @@ struct BinaryHeader {
     static const u32 CONFIGVERSION = 3;
     u32 magic;
     s32 version;
-    s32 offsets[3];
+    s32 offsets[4];
     char modFolderName[IOS::ipcMaxFileName + 1];
 };
 
@@ -87,6 +88,26 @@ struct PulBMG {
     static const u32 index = SECTION_BMG;
     BMGHeader header;
 };
+
+struct FriendEntry {
+    u64 friendCode;  // 0x0
+    u32 status;  // 0x8 RKNet friend status
+    u32 unknown;  // 0xC
+};  // 0x10
+// size_assert(FriendEntry, 0x10);
+
+struct FriendsHolder {
+    static const u32 magic = 0x4652454Eu;  // 'FREN'
+    static const u32 version = 1;
+    static const u32 curVersion = 1;
+    static const u32 index = SECTION_FRIENDS;
+    static const u32 capacity = 100;  // expanded friend list capacity, past the native 30 slots
+    SectionHeader header;
+    u16 friendCount;  // 0xC
+    u16 friendPadding;  // 0xE
+    FriendEntry friends[FriendsHolder::capacity];  // 0x10
+};  // 0x10 + capacity * sizeof(FriendEntry) = 0x650
+// size_assert(FriendsHolder, 0x650);
 
 struct ConfigFile {
     static u32 readBytes;
