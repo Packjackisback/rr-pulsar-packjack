@@ -23,6 +23,7 @@
 #include <hooks.hpp>
 #include <Settings/Settings.hpp>
 #include <Settings/SettingsParam.hpp>
+#include <Friends/Friends.hpp>
 
 kmWrite32(0x800c9980, 0x4800000c);  // b 0x800c998c
 
@@ -501,6 +502,11 @@ void VRLeaderboardPage::ApplyResults() {
 
             if (!isFriend) {
                 isFriend = IsFriendCodeInLicenseFriends(s_entries[idx].friendCode);
+            }
+
+            // Custom expanded friends list (past the native 30 slots) stored in the Pulsar config file
+            if (!isFriend && Pulsar::Friends::sInstance != nullptr) {
+                isFriend = Pulsar::Friends::sInstance->IsFriend(s_entries[idx].friendCode);
             }
         }
 
