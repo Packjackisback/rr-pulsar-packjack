@@ -18,7 +18,7 @@ void Friends::DestroyInstance() {
     Friends::sInstance = nullptr;
 }
 
-Friends::Friends() {
+Friends::Friends() : conf(nullptr), dirty(false) {
     memset(&this->friends, 0, sizeof(FriendsHolder));
     this->friends.friendCount = 0;
 }
@@ -26,13 +26,26 @@ Friends::Friends() {
 Friends::~Friends() {
 }
 
-void Friends::Load(ConfigFile &conf) {
-    this->friends = conf.GetSection<FriendsHolder>();
+void Friends::Load(const ConfigFile &confRef) {
+    this->conf = &confRef;
+    this->friends = confRef.GetSection<FriendsHolder>();
 }
 
-void Friends::Save(ConfigFile &conf) {
-    void *dest = ut::AddU32ToPtr(static_cast<void *>(&conf), static_cast<u32>(conf.header.offsets[FriendsHolder::index]));
+void Friends::Save(const ConfigFile &confRef) {
+    void *dest = ut::AddU32ToPtr(static_cast<void *>(const_cast<ConfigFile *>(&confRef)), static_cast<u32>(confRef.header.offsets[FriendsHolder::index]));
     memcpy(dest, &this->friends, sizeof(FriendsHolder));
+}
+
+void Friends::SaveTask(void *data) {
+    if (Friends::sInstance != nullptr) {
+        Friends::sInstance->Save(*Friends::sInstance->conf);
+    }
+}
+
+void Friends::RequestSave() {
+    if (Friends::sInstance == nullptr || !Friends::sInstance->IsDirty())
+        return;
+    System::sInstance->taskThread->Request(&Friends::SaveTask, nullptr, 0);
 }
 
 u32 Friends::GetFriendCount() const {
@@ -55,6 +68,7 @@ u32 Friends::AddFriend(u64 friendCode, u32 status) {
     holder.friends[idx].friendCode = friendCode;
     holder.friends[idx].status = status;
     holder.friendCount = idx + 1;
+    this->dirty = true;
     return idx;
 }
 
@@ -65,6 +79,7 @@ void Friends::RemoveFriend(u32 idx) {
             holder.friends[i] = holder.friends[i + 1];
         }
         --holder.friendCount;
+        this->dirty = true;
     }
 }
 
@@ -79,6 +94,14 @@ u32 Friends::FindFriendIdx(u64 friendCode) const {
 
 bool Friends::IsFriend(u64 friendCode) const {
     return this->FindFriendIdx(friendCode) != 0xFFFFFFFF;
+}
+
+void Friends::MarkDirty() {
+    this->dirty = true;
+}
+
+bool Friends::IsDirty() const {
+    return this->dirty;
 }
 
 const u32 Friends::FriendCapacity = FriendsHolder::capacity;

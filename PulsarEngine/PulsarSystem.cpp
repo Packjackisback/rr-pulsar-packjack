@@ -12,6 +12,7 @@
 #include <Gamemodes/OnlineTT/OnlineTT.hpp>
 #include <Settings/Settings.hpp>
 #include <Config.hpp>
+#include <Friends/Friends.hpp>
 #include <UI/ExtendedTeamSelect/ExtendedTeamManager.hpp>
 #include <SlotExpansion/CupsConfig.hpp>
 #include <core/egg/DVD/DvdRipper.hpp>
@@ -180,6 +181,10 @@ void System::Init(const ConfigFile &confRT, const ConfigFile &confCT, const Conf
     this->InitIO(type);
     this->InitSettings(&CupsConfig::sInstance->trophyCount[0]);
     Driver::CreateCharacterTable();
+
+    // Custom friends list, stored in the custom Pulsar config file, expanded past the native 30 slots
+    Friends *friends = Friends::CreateInstance();
+    friends->Load(confRT);
 
     if (IsNewChannel()) {
         NewChannel_Init();
