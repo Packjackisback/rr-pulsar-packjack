@@ -7,6 +7,7 @@
 #include <MarioKartWii/System/random.hpp>
 #include <Settings/Settings.hpp>
 #include <PulsarSystem.hpp>
+#include <Friends/Friends.hpp>
 #include <Network/PacketExpansion.hpp>
 
 namespace Pulsar {
@@ -103,7 +104,12 @@ static void ReplaceWithRandomPlayerMii(RKNet::USERHandler *handler, u32 aid, RKN
 
     u32 pid = GetPidForAid(aid);
     if (pid != 0) {
-        if (IsFriend(pid)) {
+        bool isFriendPlayer = IsFriend(pid);
+        if (!isFriendPlayer && Pulsar::Friends::sInstance != nullptr && userPacket->fc != 0) {
+            // Custom expanded friends list (past the native 30 slots) stored in the Pulsar config file
+            isFriendPlayer = Pulsar::Friends::sInstance->IsFriend(userPacket->fc);
+        }
+        if (isFriendPlayer) {
             if (PointRating::HasOriginalMiisStored()) {
                 PointRating::GetOriginalMiis(&userPacket->rflPacket.rawMiis[0], &userPacket->rflPacket.rawMiis[1]);
             }
